@@ -7,7 +7,7 @@
 */
 
 #pragma once
-#include "Maximilian.h"
+#include "maximilian.h"
 #include "../JuceLibraryCode/JuceHeader.h"
 
 //==============================================================================
@@ -34,17 +34,22 @@ public:
 private:
     //==============================================================================
     // Your private member variables go here...
-    maxiOsc osc1, osc2, osc3, lfo1, lfo2, phasor1, phasor2, phasor3;
-    maxiFilter f1, f2;
-    
-    Slider cutoff, res, lfoF1, lfoF2, lfoAmp1, lfoAmp2, speed;
-    Label cutoffLabel, resLabel, freq1Label, freq2Label, amp1Label, amp2Label, speedLabel;
-    
-    int cutoffHz = 100;
-    float resonance = 1.0;
-    int freq1 = 0, freq2 = 0, amp1 = 1, amp2 = 1;
-    
-    int pitchSequence[8] = {100, 200, 250, 350, 400, 250, 100, 250};
+	maxiOsc osc1, osc2, osc3, lfo1, lfo2, phasor1, phasor2, phasor3;
+	maxiFilter f1, f2;
 
+	Slider cutoff, res, lfoF1, lfoF2, lfoAmp1, lfoAmp2, speed;
+	Label cutoffLabel, resLabel, freq1Label, freq2Label, amp1Label, amp2Label, speedLabel;
+
+	double cutoffHz = 100;
+	double resonance = 1.0;
+	double freq1 = 0, freq2 = 0, amp1 = 1, amp2 = 1;
+	int counter = 0;
+	int pitchSequence[8] = { 100, 200, 250, 350, 400, 250, 100, 250 };
+	maxiEnv ADSR;
+	double envelope;
+	int currentCount;
+	maxiOsc timer;
+	maxiSVF filter;
+	maxiDistortion limiter;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
