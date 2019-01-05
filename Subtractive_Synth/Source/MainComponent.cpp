@@ -1,10 +1,3 @@
-/*
-  ==============================================================================
-
-    This file was auto-generated!
-
-  ==============================================================================
-*/
 #include "maximilian.h"
 #include "MainComponent.h"
 
@@ -122,40 +115,40 @@ void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFil
 
 	for (int sample = 0; sample < bufferToFill.numSamples; sample++)
 	{
-		// envelope
-		
-		//double countSpeed = phasor1.saw(0.1);
-		currentCount = phasor2.phasor(1, 0, 7);
-		//if(currentCount == 1)
-		if (currentCount==0) {
-			ADSR.trigger = 1;
-			
-		}
-		else {
-			ADSR.trigger = 0;
-		}
-
-		envelope = ADSR.adsr(1., ADSR.trigger);
+		// Counter, increments from 0 - 7, so it can iterate through all 8 pitchvalues in the pitchSequence array:
+		currentCount = phasor1.phasor(1, 0, 7);
+	
+		// Store the current square wave value, with the pitchSequence-defined frequency:
 		double sine1 = osc1.square(pitchSequence[currentCount]);
 
-		// --- Filter parameters:
+		// --- Filter parameters ---
+
+		// Two lfos, one to control cutoff, and one to control the resonance. 
+		// Offset the amplitude so that the modulation never enters negative
+		// ranges:
 		double lfo_1 = ((lfo1.triangle(freq1) + 1.0) / 2.0) * amp1;
 		double lfo_2 = ((lfo2.triangle(freq2) + 1.0) / 2.0) * amp2;
-		//Logger::outputDebugString(std::to_string(envelope));
-		//                         input, Cuttoff (Hz),   Resonance (1 - ?)
-		//double filterOut = f1.lores(sum, (cutoffHz + (lfo_1 ) ), resonance + lfo_2);
-		double pos = cutoffHz + lfo_1;
-		double bat = resonance + lfo_2;
-		if (pos > 20000) pos = 20000;
-		if (bat > 10.0) bat = 10.0;
 
-		filter.setCutoff(pos);
-		filter.setResonance(bat);
+		// Restrict the maximum resonance and cutoff values.
+		// Probably not the best, but straightforward and foolproof
+		// way of avoiding ranges that are too high, or going
+		// over the Nyquist frequency:
+		double modulatedCutoff = cutoffHz + lfo_1;
+		double modulatedRes = resonance + lfo_2;
+		if (modulatedCutoff > 20000) modulatedCutoff = 20000;
+		if (modulatedRes > 10.0) modulatedRes = 10.0;
+
+		// Update the filter with the new settings:
+		filter.setCutoff(modulatedCutoff);
+		filter.setResonance(modulatedRes);
+
+		// Set the filter to low-pass and pass the signal in
 		double fOut = filter.play(sine1, 1.0, 0.0, 0.0, 0.0); 
-		double theOutput = limiter.atanDist(fOut, 1.0);
+		// Apply the atan function to the output for a gentle distortion
+		double out = limiter.atanDist(fOut, 1.0);
 		// output
-		leftBuffer[sample] = theOutput;
-		rightBuffer[sample] = theOutput;
+		leftBuffer[sample] = out;
+		rightBuffer[sample] = rightBuffer[sample];
 	}
 }
 
@@ -167,7 +160,6 @@ void MainComponent::releaseResources()
 //==============================================================================
 void MainComponent::paint (Graphics& g)
 {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
 	g.fillAll(Colours::whitesmoke);
 	g.setColour(Colours::darkseagreen);
 	g.fillRect(20, 15, 130, 120);
@@ -178,7 +170,7 @@ void MainComponent::paint (Graphics& g)
 
 	g.fillRect(20, 395, 130, 120);
 	g.fillRect(160, 395, 130, 120);
-    // You can add your drawing code here!
+
 }
 
 void MainComponent::resized()
